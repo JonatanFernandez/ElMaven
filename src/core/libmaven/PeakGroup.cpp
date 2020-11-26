@@ -586,11 +586,8 @@ void PeakGroup::updateQuality() {
     weightedAvgPeakQuality = weightedSum / sumWeights;
 }
 
-// TODO: Remove this function as expected mz should be calculated while creating the group - Sahil
-double PeakGroup::getExpectedMz(int charge) {
-
-    float mz = 0;
-
+double PeakGroup::getExpectedMz(int charge)
+{
     if (isIsotope()
         && hasSlice()
         && hasCompoundLink()) {
@@ -598,8 +595,15 @@ double PeakGroup::getExpectedMz(int charge) {
     } else if (!isIsotope()
                && hasSlice()
                && hasCompoundLink()
+               && getCompound()->precursorMz() > 0
+               && getCompound()->productMz() > 0) {
+        return getCompound()->productMz();
+    } else if (!isIsotope()
+               && hasSlice()
+               && hasCompoundLink()
                && getCompound()->mz() > 0) {
         Compound* compound = getCompound();
+        float mz = 0.0;
         if (adduct() != nullptr && !compound->formula().empty()) {
             // computing the mass adjusted for adduct's mass
             auto mass = MassCalculator::computeNeutralMass(compound->formula());
@@ -617,15 +621,9 @@ double PeakGroup::getExpectedMz(int charge) {
             mz = compound->mz();
         }
         return mz;
-    } else if (hasSlice()
-               && hasCompoundLink()
-               && getCompound()->mz() > 0
-               && getCompound()->productMz() > 0) {
-        mz = getCompound()->productMz();
-        return mz;
     }
 
-    return -1;
+    return -1.0;
 }
 
 void PeakGroup::groupStatistics() {
